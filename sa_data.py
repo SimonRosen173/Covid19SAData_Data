@@ -28,7 +28,7 @@ def datetime_range(start_datetime, end_datetime):
 def preprocess_sa_data():
     def get_cum_daily(data_url, cum_col='total', index_col='date'):  # kwargs={}):
         cols = ['date', 'total']
-        pd_kwargs = {"usecols": [cum_col, index_col], "index_col": [index_col]}
+        pd_kwargs = {"usecols": [cum_col, index_col, 'source'], "index_col": [index_col]}
 
         data = df_from_url(data_url, pd_kwargs)
         data.reset_index(inplace=True)
@@ -40,7 +40,7 @@ def preprocess_sa_data():
         data['daily_no'] = data['cum_no']
         data['daily_no'][1:] = data['cum_no'].diff()[1:]
         # Cast columns to integer
-        data = data.astype('int32')
+        data[['cum_no']] = data[['cum_no']].astype('int32')
         return data
 
     confirmed_cases_url = "covid19za_provincial_cumulative_timeline_confirmed.csv"
@@ -158,12 +158,14 @@ def preprocess_sa_data():
         # tmp = tests_data.reset_index()['date'].tail(1)
         last_date_tested = format_date(tests_data.index[-1])
         second_last_date_tested = format_date(tests_data.index[-2])
+        sources_tested = tests_data.iloc[-1]['source'] + "," + tests_data.iloc[-2]['source']
 
         # Confirmed
         tot_confirmed = zero_space(confirmed_data.iloc[-1]['cum_no'].astype(int))
         change_confirmed = zero_space(confirmed_data.iloc[-1]['daily_no'].astype(int))
         last_date_confirmed = format_date(confirmed_data.index[-1])
         second_last_date_confirmed = format_date(confirmed_data.index[-2])
+        sources_confirmed = confirmed_data.iloc[-1]['source'] + "," + confirmed_data.iloc[-2]['source']
 
         # Active
         tot_active = zero_space(active_data.iloc[-1]['cum_no'].astype(int))
@@ -176,31 +178,33 @@ def preprocess_sa_data():
         change_deaths = zero_space(deaths_data.iloc[-1]['daily_no'].astype(int))
         last_date_deaths = format_date(deaths_data.index[-1])
         second_last_date_deaths = format_date(deaths_data.index[-2])
+        sources_deaths = deaths_data.iloc[-1]['source'] + "," + deaths_data.iloc[-2]['source']
 
         # Recoveries
         tot_recoveries = zero_space(recovered_data.iloc[-1]['cum_no'].astype(int))
         change_recoveries = zero_space(recovered_data.iloc[-1]['daily_no'].astype(int))
         last_date_recoveries = format_date(recovered_data.index[-1])
         second_last_date_recoveries = format_date(recovered_data.index[-2])
+        sources_recoveries = recovered_data.iloc[-1]['source'] + "," + recovered_data.iloc[-2]['source']
 
         now = datetime.now()
         current_time = now.strftime("%H:%M %d %B %Y")
 
         _gen_data = pd.DataFrame(dict(
             tot_confirmed=[tot_confirmed], change_confirmed=[change_confirmed], last_date_confirmed=[last_date_confirmed],
-            second_last_date_confirmed=[second_last_date_confirmed],
+            second_last_date_confirmed=[second_last_date_confirmed], sources_confirmed=[sources_confirmed],
 
             tot_deaths=[tot_deaths], change_deaths=[change_deaths],  last_date_deaths=[last_date_deaths],
-            second_last_date_deaths=[second_last_date_deaths],
+            second_last_date_deaths=[second_last_date_deaths], sources_deaths=[sources_deaths],
 
             tot_active=[tot_active], change_active=[change_active], last_date_active=[last_date_active],
             second_last_date_active=[second_last_date_active],
 
             tot_tests=[tot_tested], change_tests=[change_tested], last_date_tests=[last_date_tested],
-            second_last_date_tests=[second_last_date_tested],
+            second_last_date_tests=[second_last_date_tested], sources_tests=[sources_tested],
 
             tot_recoveries=[tot_recoveries], change_recoveries=[change_recoveries], last_date_recoveries=[last_date_recoveries],
-            second_last_date_recoveries=[second_last_date_recoveries],
+            second_last_date_recoveries=[second_last_date_recoveries], sources_recoveries=[sources_recoveries],
 
             processed_datetime=[current_time]))
 
