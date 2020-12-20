@@ -149,36 +149,39 @@ def preprocess_sa_data():
         def zero_space(num):
             return format(num, ',d').replace(",", " ")
 
+        def format_date(date: datetime) -> str:
+            return date.strftime("%d/%m/%Y")
+
         # Tests
         tot_tested = zero_space(tests_data.iloc[-1]['cum_no'].astype(int))
         change_tested = zero_space(tests_data.iloc[-1]['daily_no'].astype(int))
         # tmp = tests_data.reset_index()['date'].tail(1)
-        last_date_tested = tests_data.index[-1]
-        second_last_date_tested = tests_data.index[-2]
+        last_date_tested = format_date(tests_data.index[-1])
+        second_last_date_tested = format_date(tests_data.index[-2])
 
         # Confirmed
         tot_confirmed = zero_space(confirmed_data.iloc[-1]['cum_no'].astype(int))
         change_confirmed = zero_space(confirmed_data.iloc[-1]['daily_no'].astype(int))
-        last_date_confirmed = confirmed_data.index[-1]
-        second_last_date_confirmed = confirmed_data.index[-2]
+        last_date_confirmed = format_date(confirmed_data.index[-1])
+        second_last_date_confirmed = format_date(confirmed_data.index[-2])
 
         # Active
         tot_active = zero_space(active_data.iloc[-1]['cum_no'].astype(int))
         change_active = zero_space(active_data.iloc[-1]['daily_no'].astype(int))
-        last_date_active = confirmed_data.index[-1]
-        second_last_date_active = confirmed_data.index[-2]
+        last_date_active = format_date(confirmed_data.index[-1])
+        second_last_date_active = format_date(confirmed_data.index[-2])
 
         # Deaths
         tot_deaths = zero_space(deaths_data.iloc[-1]['cum_no'].astype(int))
         change_deaths = zero_space(deaths_data.iloc[-1]['daily_no'].astype(int))
-        last_date_deaths = deaths_data.index[-1]
-        second_last_date_deaths = deaths_data.index[-2]
+        last_date_deaths = format_date(deaths_data.index[-1])
+        second_last_date_deaths = format_date(deaths_data.index[-2])
 
         # Recoveries
         tot_recoveries = zero_space(recovered_data.iloc[-1]['cum_no'].astype(int))
         change_recoveries = zero_space(recovered_data.iloc[-1]['daily_no'].astype(int))
-        last_date_recoveries = recovered_data.index[-1]
-        second_last_date_recoveries = recovered_data.index[-2]
+        last_date_recoveries = format_date(recovered_data.index[-1])
+        second_last_date_recoveries = format_date(recovered_data.index[-2])
 
         now = datetime.now()
         current_time = now.strftime("%H:%M %d %B %Y")
@@ -188,13 +191,13 @@ def preprocess_sa_data():
             second_last_date_confirmed=[second_last_date_confirmed],
 
             tot_deaths=[tot_deaths], change_deaths=[change_deaths],  last_date_deaths=[last_date_deaths],
-            second_date_deaths=[second_last_date_deaths],
+            second_last_date_deaths=[second_last_date_deaths],
 
             tot_active=[tot_active], change_active=[change_active], last_date_active=[last_date_active],
             second_last_date_active=[second_last_date_active],
 
-            tot_tested=[tot_tested], change_tested=[change_tested], last_date_tested=[last_date_tested],
-            second_last_date_tested=[second_last_date_tested],
+            tot_tests=[tot_tested], change_tests=[change_tested], last_date_tests=[last_date_tested],
+            second_last_date_tests=[second_last_date_tested],
 
             tot_recoveries=[tot_recoveries], change_recoveries=[change_recoveries], last_date_recoveries=[last_date_recoveries],
             second_last_date_recoveries=[second_last_date_recoveries],
