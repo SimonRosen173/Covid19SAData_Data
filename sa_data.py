@@ -150,6 +150,16 @@ def preprocess_sa_data():
     all_daily_data.to_csv("data/sa/all_daily_data.csv")
 
     def get_index_page_data():
+        def zero_space_format(num):
+            is_pos = True if num >= 0 else False
+            num = zero_space(num)
+            if is_pos:
+                num = "+" + num
+            else:
+                num = "-" + num
+
+            return num
+
         def zero_space(num):
             return format(num, ',d').replace(",", " ")
 
@@ -158,7 +168,7 @@ def preprocess_sa_data():
 
         # Tests
         tot_tested = zero_space(tests_data.iloc[-1]['cum_no'].astype(int))
-        change_tested = zero_space(tests_data.iloc[-1]['daily_no'].astype(int))
+        change_tested = zero_space_format(tests_data.iloc[-1]['daily_no'].astype(int))
         # tmp = tests_data.reset_index()['date'].tail(1)
         last_date_tested = format_date(tests_data.index[-1])
         second_last_date_tested = format_date(tests_data.index[-2])
@@ -166,27 +176,27 @@ def preprocess_sa_data():
 
         # Confirmed
         tot_confirmed = zero_space(confirmed_data.iloc[-1]['cum_no'].astype(int))
-        change_confirmed = zero_space(confirmed_data.iloc[-1]['daily_no'].astype(int))
+        change_confirmed = zero_space_format(confirmed_data.iloc[-1]['daily_no'].astype(int))
         last_date_confirmed = format_date(confirmed_data.index[-1])
         second_last_date_confirmed = format_date(confirmed_data.index[-2])
         sources_confirmed = confirmed_data.iloc[-1]['source'] + "," + confirmed_data.iloc[-2]['source']
 
         # Active
         tot_active = zero_space(active_data.iloc[-1]['cum_no'].astype(int))
-        change_active = zero_space(active_data.iloc[-1]['daily_no'].astype(int))
+        change_active = zero_space_format(active_data.iloc[-1]['daily_no'].astype(int))
         last_date_active = format_date(confirmed_data.index[-1])
         second_last_date_active = format_date(confirmed_data.index[-2])
 
         # Deaths
         tot_deaths = zero_space(deaths_data.iloc[-1]['cum_no'].astype(int))
-        change_deaths = zero_space(deaths_data.iloc[-1]['daily_no'].astype(int))
+        change_deaths = zero_space_format(deaths_data.iloc[-1]['daily_no'].astype(int))
         last_date_deaths = format_date(deaths_data.index[-1])
         second_last_date_deaths = format_date(deaths_data.index[-2])
         sources_deaths = deaths_data.iloc[-1]['source'] + "," + deaths_data.iloc[-2]['source']
 
         # Recoveries
         tot_recoveries = zero_space(recovered_data.iloc[-1]['cum_no'].astype(int))
-        change_recoveries = zero_space(recovered_data.iloc[-1]['daily_no'].astype(int))
+        change_recoveries = zero_space_format(recovered_data.iloc[-1]['daily_no'].astype(int))
         last_date_recoveries = format_date(recovered_data.index[-1])
         second_last_date_recoveries = format_date(recovered_data.index[-2])
         sources_recoveries = recovered_data.iloc[-1]['source'] + "," + recovered_data.iloc[-2]['source']
