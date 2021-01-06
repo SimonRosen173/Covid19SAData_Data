@@ -3,7 +3,8 @@ import numpy as np
 import io
 import requests
 from datetime import timedelta, datetime
-
+import os
+import shutil
 
 # get dataframe from specified url using kwargs specified for read_csv
 def df_from_url(df_url, pd_kwargs={}, use_base_url=True):
@@ -43,6 +44,11 @@ def preprocess_sa_data():
 
         data['daily_no'] = data['cum_no']
         data['daily_no'][1:] = data['cum_no'].diff()[1:]
+
+        # get rolling averages
+        data['daily_no_rol_avg_3'] = round(data['daily_no'].rolling(3).mean())
+        data['daily_no_rol_avg_7'] = round(data['daily_no'].rolling(7).mean())
+
         # Cast columns to integer
         data[['cum_no']] = data[['cum_no']].astype('int32')
         return data
@@ -61,9 +67,9 @@ def preprocess_sa_data():
     def get_active_cases():
         _active_data = confirmed_data[['cum_no']].copy().rename({"cum_no": "confirmed"}, axis=1)
         _active_data = pd.concat([_active_data,
-                                 recovered_data[['cum_no']].copy().rename({"cum_no": "recovered"}, axis=1),
-                                 deaths_data[['cum_no']].copy().rename({"cum_no": "deaths"}, axis=1)
-                                 ], axis=1)
+                                  recovered_data[['cum_no']].copy().rename({"cum_no": "recovered"}, axis=1),
+                                  deaths_data[['cum_no']].copy().rename({"cum_no": "deaths"}, axis=1)
+                                  ], axis=1)
         _active_data = _active_data.iloc[9:]
         _active_data = _active_data.ffill().fillna(0)
 
@@ -71,7 +77,12 @@ def preprocess_sa_data():
         _active_data.drop(['confirmed', 'recovered', 'deaths'], axis=1, inplace=True)
         _active_data['daily_no'] = _active_data['cum_no'].copy()
         _active_data['daily_no'].iloc[1:] = _active_data['cum_no'].diff().iloc[1:]
-        _active_data = _active_data.astype('int32')
+
+        # rolling average
+        _active_data['daily_no_rol_avg_3'] = _active_data['daily_no'].rolling(3).mean()
+        _active_data['daily_no_rol_avg_7'] = _active_data['daily_no'].rolling(7).mean()
+
+        _active_data[['cum_no', 'daily_no']] = _active_data[['cum_no', 'daily_no']].astype('int32')
 
         return _active_data
 
@@ -89,9 +100,10 @@ def preprocess_sa_data():
         ], axis=1)
         # _all_cum_data['recovered'] = recovered_data['cum_no']
         # _all_cum_data['active'] = active_data['cum_no']
-        _all_cum_data.ffill(inplace=True)
-        _all_cum_data.fillna(0, inplace=True)
-        _all_cum_data = _all_cum_data.astype('int32')
+        #     _all_cum_data.ffill(inplace=True)
+        #     _all_cum_data.fillna(0, inplace=True)
+        #     _all_cum_data = _all_cum_data.astype('int32')
+        _all_cum_data = _all_cum_data.round()
 
         # DERIVED STATS
 
@@ -102,12 +114,12 @@ def preprocess_sa_data():
         # deaths_div_by_confirmed
         _all_cum_data['deaths_div_by_confirmed'] = _all_cum_data['deaths'] / _all_cum_data['confirmed']
         _all_cum_data['deaths_div_by_confirmed'] = _all_cum_data['deaths_div_by_confirmed'].round(3)
-        _all_cum_data.fillna(0.000, inplace=True)
+        #     _all_cum_data.fillna(0.000, inplace=True)
 
         # recovered_div_by_confirmed
         _all_cum_data['recovered_div_by_confirmed'] = _all_cum_data['recovered'] / _all_cum_data['confirmed']
         _all_cum_data['recovered_div_by_confirmed'] = _all_cum_data['recovered_div_by_confirmed'].round(3)
-        _all_cum_data.fillna(0.000, inplace=True)
+        #     _all_cum_data.fillna(0.000, inplace=True)
 
         # STATS PER MILLION POP
 
@@ -122,27 +134,47 @@ def preprocess_sa_data():
         _all_cum_data['active_per_mil'] = _all_cum_data['active'] / sa_tot_pop_mil
         tmp_cols = ['confirmed_per_mil', 'tests_per_mil', 'deaths_per_mil', 'recovered_per_mil', 'active_per_mil']
         _all_cum_data[tmp_cols] = _all_cum_data[tmp_cols].round(2)
-        _all_cum_data.fillna(0.00, inplace=True)
+        #     _all_cum_data.fillna(0.00, inplace=True)
 
         return _all_cum_data
+
+    # All cumulative data
+    all_cum_data = get_all_cum_data()
+    #     all_cum_data.to_csv('data/sa/all_cum_data.csv')
 
     # All cumulative data
     all_cum_data = get_all_cum_data()
     all_cum_data.to_csv('data/sa/all_cum_data.csv')
 
     def get_all_daily_data():
-        _all_daily_data = confirmed_data[['daily_no']].rename({"daily_no": "confirmed"}, axis=1)
+        #     _all_daily_data = confirmed_data[['daily_no']].rename({"daily_no": "confirmed"}, axis=1)
+        cols_to_use = ['daily_no', 'daily_no_rol_avg_3', 'daily_no_rol_avg_7']
+        val_names = ["confirmed", "tests", "deaths", "recovered", "active"]
+
+        def rename_df(df, val_name):
+            col_orig_names = cols_to_use
+            new_df = df[col_orig_names].copy()
+            col_new_suffixes = ['', '_rol_avg_3', '_rol_avg_7']
+            rename_dict = {orig_name: val_name + new_suffix for (orig_name, new_suffix) in
+                           zip(col_orig_names, col_new_suffixes)}
+            #         print(rename_dict)
+            new_df.rename(rename_dict, axis=1, inplace=True)
+            return new_df
+
+        _all_daily_data = rename_df(confirmed_data, 'confirmed')
+
         _all_daily_data = pd.concat([
             _all_daily_data,
-            tests_data[['daily_no']].rename({"daily_no": "tests"}, axis=1),
-            deaths_data[['daily_no']].rename({"daily_no": "deaths"}, axis=1),
-            recovered_data[['daily_no']].rename({"daily_no": "recovered"}, axis=1),
-            active_data[['daily_no']].rename({"daily_no": "active"}, axis=1),
+            #         tests_data[cols_to_use].rename({"daily_no": "tests"}, axis=1),
+            #         deaths_data[cols_to_use].rename({"daily_no": "deaths"}, axis=1),
+            #         recovered_data[cols_to_use].rename({"daily_no": "recovered"}, axis=1),
+            #         active_data[cols_to_use].rename({"daily_no": "active"}, axis=1),
+            rename_df(tests_data[cols_to_use], 'tests'),
+            rename_df(deaths_data[cols_to_use], 'deaths'),
+            rename_df(recovered_data[cols_to_use], 'recovered'),
+            rename_df(active_data[cols_to_use], 'active'),
 
         ], axis=1)
-        _all_daily_data.ffill(inplace=True)
-        _all_daily_data.fillna(0, inplace=True)
-        _all_daily_data = _all_daily_data.astype('int32')
         return _all_daily_data
 
     # All daily data
@@ -167,36 +199,45 @@ def preprocess_sa_data():
             return date.strftime("%d/%m/%Y")
 
         # Tests
-        tot_tested = zero_space(tests_data.iloc[-1]['cum_no'].astype(int))
-        change_tested = zero_space_format(tests_data.iloc[-1]['daily_no'].astype(int))
-        # tmp = tests_data.reset_index()['date'].tail(1)
+        # tot_tested = zero_space(tests_data.iloc[-1]['cum_no'].astype(int))
+        # change_tested = zero_space_format(tests_data.iloc[-1]['daily_no'].astype(int))
+        tot_tested = tests_data.iloc[-1]['cum_no'].astype(int)
+        change_tested = tests_data.iloc[-1]['daily_no'].astype(int)
         last_date_tested = format_date(tests_data.index[-1])
         second_last_date_tested = format_date(tests_data.index[-2])
         sources_tested = tests_data.iloc[-1]['source'] + "," + tests_data.iloc[-2]['source']
 
         # Confirmed
-        tot_confirmed = zero_space(confirmed_data.iloc[-1]['cum_no'].astype(int))
-        change_confirmed = zero_space_format(confirmed_data.iloc[-1]['daily_no'].astype(int))
+        # tot_confirmed = zero_space(confirmed_data.iloc[-1]['cum_no'].astype(int))
+        # change_confirmed = zero_space_format(confirmed_data.iloc[-1]['daily_no'].astype(int))
+        tot_confirmed = confirmed_data.iloc[-1]['cum_no'].astype(int)
+        change_confirmed = confirmed_data.iloc[-1]['daily_no'].astype(int)
         last_date_confirmed = format_date(confirmed_data.index[-1])
         second_last_date_confirmed = format_date(confirmed_data.index[-2])
         sources_confirmed = confirmed_data.iloc[-1]['source'] + "," + confirmed_data.iloc[-2]['source']
 
         # Active
-        tot_active = zero_space(active_data.iloc[-1]['cum_no'].astype(int))
-        change_active = zero_space_format(active_data.iloc[-1]['daily_no'].astype(int))
+        # tot_active = zero_space(active_data.iloc[-1]['cum_no'].astype(int))
+        # change_active = zero_space_format(active_data.iloc[-1]['daily_no'].astype(int))
+        tot_active = active_data.iloc[-1]['cum_no'].astype(int)
+        change_active = active_data.iloc[-1]['daily_no'].astype(int)
         last_date_active = format_date(confirmed_data.index[-1])
         second_last_date_active = format_date(confirmed_data.index[-2])
 
         # Deaths
-        tot_deaths = zero_space(deaths_data.iloc[-1]['cum_no'].astype(int))
-        change_deaths = zero_space_format(deaths_data.iloc[-1]['daily_no'].astype(int))
+        # tot_deaths = zero_space(deaths_data.iloc[-1]['cum_no'].astype(int))
+        # change_deaths = zero_space_format(deaths_data.iloc[-1]['daily_no'].astype(int))
+        tot_deaths = deaths_data.iloc[-1]['cum_no'].astype(int)
+        change_deaths = deaths_data.iloc[-1]['daily_no'].astype(int)
         last_date_deaths = format_date(deaths_data.index[-1])
         second_last_date_deaths = format_date(deaths_data.index[-2])
         sources_deaths = deaths_data.iloc[-1]['source'] + "," + deaths_data.iloc[-2]['source']
 
         # Recoveries
-        tot_recoveries = zero_space(recovered_data.iloc[-1]['cum_no'].astype(int))
-        change_recoveries = zero_space_format(recovered_data.iloc[-1]['daily_no'].astype(int))
+        # tot_recoveries = zero_space(recovered_data.iloc[-1]['cum_no'].astype(int))
+        # change_recoveries = zero_space_format(recovered_data.iloc[-1]['daily_no'].astype(int))
+        tot_recoveries = recovered_data.iloc[-1]['cum_no'].astype(int)
+        change_recoveries = recovered_data.iloc[-1]['daily_no'].astype(int)
         last_date_recoveries = format_date(recovered_data.index[-1])
         second_last_date_recoveries = format_date(recovered_data.index[-2])
         sources_recoveries = recovered_data.iloc[-1]['source'] + "," + recovered_data.iloc[-2]['source']
@@ -471,7 +512,17 @@ def preprocess_gp_data():
     gp_tot_latest_df.to_csv("data/gp/gp_tot_latest.csv")
 
     # Additional data for tables & figures, e.g. date which data is for
-    df_dict = {"name": ["gp_tot_latest"], "date_updated": [gp_summary_date.strftime("%d %B %Y")]}
+    sa_page_updated = datetime.now().strftime("%d %B %Y @ %I:%M%p")
+    df_dict = {
+        "name": [
+            "gp_tot_latest",
+            "sa_page_updated"
+        ],
+        "date_updated": [
+            gp_summary_date.strftime("%d %B %Y"),
+            sa_page_updated
+        ]
+    }
     data_info_df = pd.DataFrame(df_dict)
     data_info_df.set_index("name")
     data_info_df.to_csv("data/data_info.csv", index=False)
@@ -550,6 +601,14 @@ def preprocess_gp_data():
     print("GP Pre-Processing Completed")
 
 
+def copy_data_local():
+    src_path = "data"
+    dest_path = "C:/Users/Simon/Documents/Additional/Data Science/Coronavirus_SA/Website/Covid19SAData_JS/test_data"
+    shutil.rmtree(dest_path)  # BE CAREFUL WITH THIS
+    shutil.copytree(src_path, dest_path)
+    print("Data copied locally")
+
+
 def preprocess_all():
     print("----------------------")
     print("Pre-Processing Started")
@@ -561,3 +620,4 @@ def preprocess_all():
 
 if __name__ == '__main__':
     preprocess_all()
+    # copy_data_local()
