@@ -1,10 +1,15 @@
+print("Imports started")
+
 import pandas as pd
 import numpy as np
 import io
 import requests
 from datetime import timedelta, datetime
 import os
+import sys
 import shutil
+
+print("Imports successful")
 
 # get dataframe from specified url using kwargs specified for read_csv
 def df_from_url(df_url, pd_kwargs={}, use_base_url=True):
@@ -620,6 +625,7 @@ def preprocess_all():
 
 if __name__ == '__main__':
     preprocess_all()
-    # copy_data_local()
-
-# Test commit
+    if sys.argv and sys.argv[0] == "pythonanywhere":
+        pass
+    else:
+        copy_data_local()
