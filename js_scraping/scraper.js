@@ -5,7 +5,6 @@ const rp = require('request-promise');
 const nicd_media_alert_url = "https://www.nicd.ac.za/media/alerts/";
 // const url = "https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-07-jan-2021/";
 const ch = require('cheerio');
-const puppeteer = require("puppeteer");
 
 // drop 'column' from 2d array based off given index
 function drop_col(table, col_ind){
