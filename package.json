@@ -1,0 +1,9 @@
+{
+  "name": "Covid19SAData_Data",
+  "version": "1.0.0",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.5",
+    "puppeteer": "^5.5.0",
+    "request-promise": "^4.2.6"
+  }
+}

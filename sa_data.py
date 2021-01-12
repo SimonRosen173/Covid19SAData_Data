@@ -11,6 +11,9 @@ import shutil
 
 print("Imports successful")
 
+scraped_data_path = 'data/scraped/'
+
+
 # get dataframe from specified url using kwargs specified for read_csv
 def df_from_url(df_url, pd_kwargs={}, use_base_url=True):
     base_url = "https://raw.githubusercontent.com/dsfsi/covid19za/master/data/"
@@ -36,11 +39,16 @@ def datetime_range(start_datetime, end_datetime):
 # ---------------
 # Data at country level
 def preprocess_sa_data():
-    def get_cum_daily(data_url, cum_col='total', index_col='date'):  # kwargs={}):
+    def get_cum_daily(data_url, cum_col='total', index_col='date', use_local_data=False):  # kwargs={}):
         cols = ['date', 'total']
         pd_kwargs = {"usecols": [cum_col, index_col, 'source'], "index_col": [index_col]}
 
-        data = df_from_url(data_url, pd_kwargs)
+        if use_local_data:
+            path = scraped_data_path + data_url
+            data = pd.read_csv(path, **pd_kwargs)
+        else:
+            data = df_from_url(data_url, pd_kwargs)
+
         data.reset_index(inplace=True)
         data['date'] = pd.to_datetime(data['date'], format='%d-%m-%Y')
         data.set_index('date', inplace=True)
@@ -59,15 +67,17 @@ def preprocess_sa_data():
         return data
 
     confirmed_cases_url = "covid19za_provincial_cumulative_timeline_confirmed.csv"
-    confirmed_data = get_cum_daily(confirmed_cases_url)
+    confirmed_data = get_cum_daily(confirmed_cases_url, use_local_data=True)
 
     deaths_url = "covid19za_provincial_cumulative_timeline_deaths.csv"
-    deaths_data = get_cum_daily(deaths_url)
+    deaths_data = get_cum_daily(deaths_url, use_local_data=True)
 
     tests_url = "covid19za_timeline_testing.csv"
-    tests_data = get_cum_daily(tests_url, 'cumulative_tests', 'date')
+    tests_data = get_cum_daily(tests_url, 'cumulative_tests', 'date', use_local_data=True)
 
-    recovered_data = get_cum_daily(tests_url, 'recovered', 'date')
+    recovered_url = "covid19za_provincial_cumulative_timeline_recoveries.csv"
+    # recovered_data = get_cum_daily(tests_url, 'recovered', 'date')
+    recovered_data = get_cum_daily(recovered_url, use_local_data=True)
 
     def get_active_cases():
         _active_data = confirmed_data[['cum_no']].copy().rename({"cum_no": "confirmed"}, axis=1)

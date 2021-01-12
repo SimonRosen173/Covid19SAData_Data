@@ -1,0 +1,34 @@
+https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-09-jan-2021/
+LATEST CONFIRMED CASES OF COVID-19 IN SOUTH AFRICA (09 JAN 2021)
+09 JAN 2021
+###
+Province,Cases
+Eastern Cape,179713
+Free State,66133
+Gauteng,328925
+KwaZulu-Natal,247647
+Limpopo,35813
+Mpumalanga,44818
+North West,45879
+Northern Cape,27383
+Western Cape,237865
+Unknown,0
+Total,1214176
+###
+Sector,Total tested
+PRIVATE,4138584
+PUBLIC,2982263
+Total,7120847
+###
+Province,Total Deaths,Total Recoveries
+Eastern Cape,8662,163062
+Free State,2276,56089
+Gauteng,6142,276998
+KwaZulu-Natal,5170,153274
+Limpopo,663,26447
+Mpumalanga,697,36431
+North West,703,35640
+Northern Cape,437,23529
+Western Cape,8074,185242
+Total,32824,956712
+SUCCESS
