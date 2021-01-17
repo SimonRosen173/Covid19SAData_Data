@@ -1,4 +1,4 @@
-date,EC,FS,GP,KZN,LP,MP,NC,NW,UNKNOWN,Unnamed: 14,WC,YYYYMMDD,source,total,
+date,EC,FS,GP,KZN,LP,MP,NC,NW,UNKNOWN,Unnamed: 14,WC,YYYYMMDD,source,total,Unnamed: 15
 05-03-2020,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,,0.0,20200305,,1.0,
 07-03-2020,0.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,,0.0,20200307,,2.0,
 08-03-2020,0.0,0.0,1.0,2.0,0.0,0.0,0.0,0.0,0.0,,0.0,20200308,,3.0,
@@ -314,4 +314,4 @@ date,EC,FS,GP,KZN,LP,MP,NC,NW,UNKNOWN,Unnamed: 14,WC,YYYYMMDD,source,total,
 13-01-2021,183594.0,68142.0,346482.0,264532.0,41847.0,48447.0,28382.0,48538.0,0.0,,248339.0,20210113,https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-13-jan-2021/,1278303.0,
 14-01-2021,184611.0,68758.0,350976.0,269632.0,43737.0,49943.0,28683.0,49359.0,0.0,,251107.0,20210114,https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-14-jan-2021/,1296806.0,
 15-01-2021,185377.0,69379.0,354892.0,273452.0,44969.0,50988.0,28965.0,50251.0,0.0,,253413.0,20210115,https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-15-jan-2021/,,
-16-01-2021,186143.0,70040.0,358462.0,276794.0,46361.0,52105.0,29346.0,50881.0,0.0,,255527.0,20210116,https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-16-jan-2021/,,0.0
+16-01-2021,186143.0,70040.0,358462.0,276794.0,46361.0,52105.0,29346.0,50881.0,0.0,,255527.0,20210116,https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-16-jan-2021/,,
