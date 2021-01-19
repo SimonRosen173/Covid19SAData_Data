@@ -2,23 +2,28 @@
 from subprocess import Popen, PIPE
 import pandas as pd
 from datetime import datetime
+import io
+import requests
 
 
-def scrape_data():
-
-    p = Popen(["node", "js_scraping/scraper.js"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+def scrape_data(no_sources=1):
+    p = Popen(["node", "js_scraping/scraper.js", str(no_sources)], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     output = p.stdout  # .read().decode("utf-8")
 
     def next_line():
         return output.readline().decode("utf-8").replace("\n", "")
 
-    no_sources = 1  # TODO - Implement
+    no_sources = int(next_line())  # should be same as arg of this method
 
     for i in range(no_sources):
+        input_date_format = '%d %b %Y'
+        stored_date_format = '%d-%m-%Y'
+
         # Gen Data
         source = next_line()
         heading = next_line()
         data_date = next_line()
+        date_datetime = datetime.strptime(data_date, input_date_format)
         next_line()
 
         print(f"{source} {heading} {data_date}")
@@ -85,7 +90,12 @@ def scrape_data():
             df['date'] = datetime.strptime(given_date, date_format).strftime('%d-%m-%Y')  # '09-01-2021'
             df['YYYYMMDD'] = datetime.strptime(given_date, date_format).strftime('%Y%m%d')  # '20210109'
 
-        input_date_format = '%d %b %Y'
+        def sort_by_date(df: pd.DataFrame, date_format: str):
+            df.reset_index(inplace=True)
+            df['date'] = pd.to_datetime(df['date'], format=date_format)
+            df.sort_index(inplace=True)
+            df['date'] = df['date'].apply(lambda x: x.strftime(date_format))  # datetime.strptime(given_date, date_format).strftime('%d-%m-%Y')
+            df.set_index('date', inplace=True)
 
         # ------------------
         #       CASES
@@ -98,6 +108,7 @@ def scrape_data():
         cases_data_df_piv['source'] = source
         cases_date = cases_data_df_piv['date'].iloc[-1]  # need date in this format
         cases_data_df_piv.set_index('date', inplace=True)
+        # cases_data_df_piv.sort_index(inplace=True)
 
         prov_cum_cases = pd.read_csv('data/scraped/covid19za_provincial_cumulative_timeline_confirmed.csv', index_col='date')
 
@@ -108,6 +119,7 @@ def scrape_data():
         else:
             prov_cum_cases = prov_cum_cases.append(cases_data_df_piv)
 
+        sort_by_date(prov_cum_cases, stored_date_format)
         prov_cum_cases.to_csv("data/scraped/covid19za_provincial_cumulative_timeline_confirmed.csv", index=True)
 
         # ------------------
@@ -145,6 +157,8 @@ def scrape_data():
         else:
             cum_tests = cum_tests.append(tests_df_piv)
 
+        # cum_tests.sort_index(inplace=True, ascending=False)
+        sort_by_date(cum_tests, stored_date_format)
         cum_tests.to_csv('data/scraped/covid19za_timeline_testing.csv', index=True)
 
         # ---------------------
@@ -162,6 +176,8 @@ def scrape_data():
         deaths_data_df_piv.set_index('date', inplace=True)
 
         prov_cum_deaths = pd.read_csv('data/scraped/covid19za_provincial_cumulative_timeline_deaths.csv', index_col='date')
+        # prov_cum_deaths['date'] = pd.to_datetime(prov_cum_deaths['date'], format=stored_date_format)
+        # prov_cum_deaths.set_index('date', inplace=True)
 
         # Append new day's data to csv if it has not already been added otherwise updated day's data
         # Update values instead of doing nothing in case values have been changed
@@ -170,6 +186,8 @@ def scrape_data():
         else:
             prov_cum_deaths = prov_cum_deaths.append(deaths_data_df_piv)
 
+        # prov_cum_deaths.sort_index(inplace=True, ascending=False)
+        sort_by_date(prov_cum_deaths, stored_date_format)
         prov_cum_deaths.to_csv("data/scraped/covid19za_provincial_cumulative_timeline_deaths.csv", index=True)
 
         # RECOVERIES
@@ -179,6 +197,8 @@ def scrape_data():
         recovered_data_df_piv.set_index('date', inplace=True)
 
         prov_cum_recovered = pd.read_csv('data/scraped/covid19za_provincial_cumulative_timeline_recoveries.csv', index_col='date')
+        # prov_cum_recovered['date'] = pd.to_datetime(prov_cum_recovered['date'], format=stored_date_format)
+        # prov_cum_recovered.set_index('date', inplace=True)
 
         # Append new day's data to csv if it has not already been added otherwise updated day's data
         # Update values instead of doing nothing in case values have been changed
@@ -187,6 +207,8 @@ def scrape_data():
         else:
             prov_cum_recovered = prov_cum_recovered.append(recovered_data_df_piv)
 
+        # prov_cum_recovered.sort_index(inplace=True, ascending=False)
+        sort_by_date(prov_cum_recovered, stored_date_format)
         prov_cum_recovered.to_csv("data/scraped/covid19za_provincial_cumulative_timeline_recoveries.csv", index=True)
 
         # ------------------
@@ -196,5 +218,31 @@ def scrape_data():
         print(f"is_success: {is_success}")
 
 
+def set_data_from_repo():
+    # get dataframe from specified url using kwargs specified for read_csv
+    def df_from_url(df_url, pd_kwargs={}, use_base_url=True) -> pd.DataFrame:
+        base_url = "https://raw.githubusercontent.com/SimonRosen173/Covid19SAData_Data/master/data/scraped/"
+        if use_base_url:
+            df_url = base_url + df_url
+        df_req = requests.get(df_url).content
+        df = pd.read_csv(io.StringIO(df_req.decode('utf-8')), **pd_kwargs)
+        return df
+
+    local_path = "data/scraped/"
+    # Cases
+    cases_df = df_from_url('covid19za_provincial_cumulative_timeline_confirmed.csv', {"index_col": "date"})
+    cases_df.to_csv(local_path+"covid19za_provincial_cumulative_timeline_confirmed.csv")
+    # Tests
+    tests_df = df_from_url('covid19za_timeline_testing.csv', {"index_col": "date"})
+    tests_df.to_csv(local_path + "covid19za_timeline_testing.csv")
+    # Recoveries
+    recoveries_df = df_from_url('covid19za_provincial_cumulative_timeline_recoveries.csv', {"index_col": "date"})
+    recoveries_df.to_csv(local_path + "covid19za_provincial_cumulative_timeline_recoveries.csv")
+    # Deaths
+    deaths_df = df_from_url('covid19za_provincial_cumulative_timeline_deaths.csv', {"index_col": "date"})
+    deaths_df.to_csv(local_path + "covid19za_provincial_cumulative_timeline_deaths.csv")
+
+
 if __name__ == "__main__":
-    scrape_data()
+    scrape_data(1)
+    # set_data_from_repo()

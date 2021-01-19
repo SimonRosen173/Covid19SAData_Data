@@ -4,7 +4,7 @@ import sys
 
 if __name__ == '__main__':
     print(sys.argv)
-    scraper.scrape_data()
+    scraper.scrape_data(1)
     sa_data.preprocess_all()
     if len(sys.argv) > 1 and sys.argv[1] == "pythonanywhere":
         pass
