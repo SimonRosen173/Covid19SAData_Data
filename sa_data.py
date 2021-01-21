@@ -155,10 +155,6 @@ def preprocess_sa_data():
 
     # All cumulative data
     all_cum_data = get_all_cum_data()
-    #     all_cum_data.to_csv('data/sa/all_cum_data.csv')
-
-    # All cumulative data
-    all_cum_data = get_all_cum_data()
     all_cum_data.to_csv('data/sa/all_cum_data.csv')
 
     def get_all_daily_data():
@@ -299,6 +295,7 @@ def preprocess_prov_data():
             yield curr_date
 
     # round_no - decimals to round to
+    # todo
     def get_cum_daily_by_prov(data_url, fill_date_gaps=False, dropna=True, round_no=3):
         cols = ['date', 'EC', 'FS', 'GP', 'KZN', 'LP', 'MP', 'NC', 'NW', 'WC', 'UNKNOWN']
         pd_kwargs = {"usecols": cols}
@@ -353,24 +350,29 @@ def preprocess_prov_data():
         return data
 
     # Confirmed
-    confirmed_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_confirmed.csv")
-    confirmed_by_prov_timeline.to_csv("data/provincial/confirmed_by_prov_timeline.csv")
-
-    # Deaths
-    deaths_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_deaths.csv",
-                                                    round_no=4)
-    deaths_by_prov_timeline.to_csv("data/provincial/deaths_by_prov_timeline.csv")
-
-    # Recoveries
-    recoveries_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_recoveries.csv",
-                                                        fill_date_gaps=True)
-    recoveries_by_prov_timeline.to_csv("data/provincial/recoveries_by_prov_timeline.csv")
+    # confirmed_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_confirmed.csv")
+    # confirmed_by_prov_timeline.to_csv("data/provincial/confirmed_by_prov_timeline.csv")
+    #
+    # # Deaths
+    # deaths_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_deaths.csv",
+    #                                                 round_no=4)
+    # deaths_by_prov_timeline.to_csv("data/provincial/deaths_by_prov_timeline.csv")
+    #
+    # # Recoveries
+    # recoveries_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_recoveries.csv",
+    #                                                     fill_date_gaps=True)
+    # recoveries_by_prov_timeline.to_csv("data/provincial/recoveries_by_prov_timeline.csv")
 
     # Total & Latest Change
-    def get_tot_latest_change(data_url, fill_date_gaps=False):
+    def get_tot_latest_change(data_url, fill_date_gaps=False, use_local_data=False):
         cols = ['date', 'EC', 'FS', 'GP', 'KZN', 'LP', 'MP', 'NC', 'NW', 'WC', 'UNKNOWN']
         pd_kwargs = {"usecols": cols}
-        cum_data = df_from_url(data_url, pd_kwargs)
+
+        if use_local_data:
+            cum_data = pd.read_csv(scraped_data_path+data_url, **pd_kwargs)
+        else:
+            cum_data = df_from_url(data_url, pd_kwargs)
+
         cum_data.dropna(inplace=True)  # Rather fillna or ffill - look into
         cum_data['date'] = pd.to_datetime(cum_data['date'], format='%d-%m-%Y')
 
@@ -453,10 +455,14 @@ def preprocess_prov_data():
 
         prov_df_list = list(map(add_total, prov_df_list))
 
-        prov_df_cols_list = [['Cases', 'New Cases'], ['Recoveries', 'New Recoveries'], ['Deaths', 'New Deaths']]
+        prov_df_cols_list = [['tot_confirmed', 'change_confirmed'], ['tot_recoveries', 'change_recoveries'], ['tot_deaths', 'change_deaths']]
         form_prov_df_list = [get_prov_df_correct_format(tup[0], tup[1]) for tup in zip(prov_df_list, prov_df_cols_list)]
 
         _prov_summary_df = pd.concat([form_prov_df_list[0], form_prov_df_list[1], form_prov_df_list[2]], axis=1)
+
+        _prov_summary_df = _prov_summary_df.apply(pd.to_numeric)
+        _prov_summary_df['tot_active'] = _prov_summary_df['tot_confirmed'] - _prov_summary_df['tot_deaths'] - _prov_summary_df['tot_recoveries']
+        _prov_summary_df['change_active'] = _prov_summary_df['change_confirmed'] - _prov_summary_df['change_deaths'] - _prov_summary_df['change_recoveries']
 
         return _prov_summary_df
 
@@ -629,7 +635,7 @@ def preprocess_all():
     print("Pre-Processing Started")
     preprocess_sa_data()
     preprocess_prov_data()
-    preprocess_gp_data()
+    # preprocess_gp_data()
     print("Pre-Processing Completed")
 
 

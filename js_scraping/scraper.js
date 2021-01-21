@@ -103,13 +103,39 @@ function extract_from_page(url){
             // console.log("\n-----------------------\n");
             // let out_str = url + "\n";
             console.log(url);
-            let headings = ch('h1',html);
-            let first_h1_text = headings[0].childNodes[0].data;
+            let h1s = ch('h1',html);
+            let first_h1_text = h1s[0].childNodes[0].data;
             console.log(first_h1_text);
             // out_str += first_h1_text + "\n";
             // extract date
-            let date_regex = /[0-9]{2} [a-zA-Z]{3} [0-9]{4}/g; // e.g. for 01 May 2020
-            let date_text = first_h1_text.match(date_regex)[0];
+            let date_regex = /[0-9]{1,2} [a-zA-Z]{3,} [0-9]{4}/g; // e.g. for 01 May 2020 or 1 January 2020
+            // let date_text = first_h1_text.match(date_regex)[0];
+            let date_text = "";
+            let h3s = ch('h3', html);
+            for (let i = 0; i<h3s.length; i++){
+                let curr_h3_txt = h3s[i].childNodes[0].data;
+                let regex_match = curr_h3_txt.match(date_regex);
+                if (regex_match!==null){
+                    date_text = regex_match[0];
+                    let date_arr = date_text.split(" ");
+                    let day = date_arr[0];
+                    let month = date_arr[1];
+                    let year = date_arr[2];
+                    if (day.length < 2){
+                        day = "0" + day;
+                    }
+                    if (month.length !== 3){
+                        month = month.slice(0,3);
+                    }
+                    date_text = day + " " + month + " " + year;
+                    // convert to correct format
+                    // Do Stuff
+                    break;
+                }
+            }
+
+            // console.log(h3s)
+
             console.log(date_text);
             // out_str+=date_text+"\n";
 
@@ -175,6 +201,7 @@ function scrape(no_sources){
         .then(function(html){
             let alert_urls_dicts = [];
             let alert_a_list = ch('article > div > div > h3 > a', html);
+            let alert_urls_list = [];
 
             for (let i = 0; i<alert_a_list.length; i++){
                 let curr_heading_text = alert_a_list[i].children[0].data;
@@ -183,9 +210,10 @@ function scrape(no_sources){
                     let date_regex = /[0-9]{2} [a-zA-Z]{3} [0-9]{4}/g; // e.g. for 01 May 2020
                     let date_text = curr_heading_text.match(date_regex)[0];
                     alert_urls_dicts.push({"date":date_text, "url":alert_a_list[i].attribs.href});
+                    alert_urls_list.push(alert_a_list[i].attribs.href);
                 }
             }
-            alert_urls_dicts.sort(sort_dates);
+            // alert_urls_dicts.sort(sort_dates);
             // console.log(alert_urls_dicts);
             // for (let i = 0; i< alert_urls_dicts.length; i++){
             //     extract_from_page(alert_urls_dicts[i]['url']);
@@ -203,7 +231,7 @@ function scrape(no_sources){
 
 function main(){
     let no_sources = 1; // default
-    if (process.argv.length >= 2){
+    if (process.argv.length >= 2 && process.argv[2] !== undefined){
         no_sources = process.argv[2];
     }
 
