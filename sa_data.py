@@ -6,6 +6,7 @@ import io
 import requests
 from datetime import timedelta, datetime
 import os
+from dateutil import tz
 import sys
 import shutil
 
@@ -278,6 +279,31 @@ def preprocess_sa_data():
 
     index_page_data = get_index_page_data()
     index_page_data.to_csv("data/sa/gen_data.csv", index=False)
+
+    # save datetime when sa data page was last updated
+    # convert datetime to SA time zone
+    curr_zone = tz.tzlocal()
+    sa_zone = tz.gettz('Africa/Johannesburg')
+
+    now_datetime_curr_zone = datetime.now().replace(tzinfo=curr_zone)
+    now_datetime_sa_zone = now_datetime_curr_zone.astimezone(sa_zone)
+
+    # if tz.tolocal() == tz.tzutc():
+    #     utc_zone = tz.gettz('UTC')
+    #     sa_zone = tz.gettz('Africa/Johannesburg')
+    #
+    #     now_datetime_utc = datetime.now().replace(tzinfo=utc_zone)
+    #
+    #     now_datetime_sa = now_datetime_utc.astimezone(to_zom)
+    # else:
+    #     now_datetime_sa = datetime.now()
+
+    # now_datetime_gmt = now_datetime_utc
+    sa_page_updated = now_datetime_sa_zone.strftime("%d %B %Y @ %I:%M%p")
+
+    data_info_df = pd.read_csv('data/data_info.csv', index_col='name')
+    data_info_df.loc['sa_page_updated']['date_updated'] = sa_page_updated
+    data_info_df.to_csv('data/data_info.csv')
 
 
 # -----------
