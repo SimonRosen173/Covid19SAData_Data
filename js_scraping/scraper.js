@@ -6,6 +6,8 @@ const nicd_media_alert_url = "https://www.nicd.ac.za/media/alerts/";
 // const url = "https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-07-jan-2021/";
 const ch = require('cheerio');
 
+let date_regex = /[0-9]{1,2} [a-zA-Z]{3,} [0-9]{4}/g; // e.g. for 01 May 2020 or 1 January 2020
+
 // drop 'column' from 2d array based off given index
 function drop_col(table, col_ind){
     for (let i = 0; i<table.length; i++){
@@ -97,6 +99,25 @@ function print_data(data){
     }
 }
 
+function format_date(date_str){
+    if (date_str.match(date_regex)!== null) {
+        let date_arr = date_str.split(" ");
+        let day = date_arr[0];
+        let month = date_arr[1];
+        let year = date_arr[2];
+        if (day.length < 2) {
+            day = "0" + day;
+        }
+        if (month.length !== 3) {
+            month = month.slice(0, 3);
+        }
+        date_str = day + " " + month + " " + year;
+        return date_str;
+    } else {
+        return "";
+    }
+}
+
 function extract_from_page(url){
     rp(url)
         .then(function(html){
@@ -108,49 +129,59 @@ function extract_from_page(url){
             console.log(first_h1_text);
             // out_str += first_h1_text + "\n";
             // extract date
-            let date_regex = /[0-9]{1,2} [a-zA-Z]{3,} [0-9]{4}/g; // e.g. for 01 May 2020 or 1 January 2020
+            // let date_regex = /[0-9]{1,2} [a-zA-Z]{3,} [0-9]{4}/g; // e.g. for 01 May 2020 or 1 January 2020
             // let date_text = first_h1_text.match(date_regex)[0];
-            let date_text = "";
-            let h3s = ch('h3', html);
-            for (let i = 0; i<h3s.length; i++){
-                let curr_h3_txt = h3s[i].childNodes[0].data;
-                let regex_match = curr_h3_txt.match(date_regex);
-                if (regex_match!==null){
-                    date_text = regex_match[0];
-                    let date_arr = date_text.split(" ");
-                    let day = date_arr[0];
-                    let month = date_arr[1];
-                    let year = date_arr[2];
-                    if (day.length < 2){
-                        day = "0" + day;
-                    }
-                    if (month.length !== 3){
-                        month = month.slice(0,3);
-                    }
-                    date_text = day + " " + month + " " + year;
-                    // convert to correct format
-                    // Do Stuff
-                    break;
-                }
-            }
+            // let date_text = "";
+            // let h3s = ch('h3', html);
+            // for (let i = 0; i<h3s.length; i++){
+            //     let curr_h3_txt = h3s[i].childNodes[0].data;
+            //     let regex_match = curr_h3_txt.match(date_regex);
+            //     if (regex_match!==null){
+            //         // date_text = regex_match[0];
+            //         date_text = format_date(regex_match[0]);
+            //         // let date_arr = date_text.split(" ");
+            //         // let day = date_arr[0];
+            //         // let month = date_arr[1];
+            //         // let year = date_arr[2];
+            //         // if (day.length < 2){
+            //         //     day = "0" + day;
+            //         // }
+            //         // if (month.length !== 3){
+            //         //     month = month.slice(0,3);
+            //         // }
+            //         // date_text = day + " " + month + " " + year;
+            //         // convert to correct format
+            //         // Do Stuff
+            //         break;
+            //     }
+            // }
 
             // console.log(h3s)
 
-            console.log(date_text);
+            // console.log(date_text);
             // out_str+=date_text+"\n";
 
             // get tables
             let tables = ch('table',html);
 
-            // Cases
+            // CASES
             let cases_raw_data = extract_from_table(tables[0]);
+            // get date - assuming it is from second column heading (format will probs change randomly)
+            let raw_str = cases_raw_data[0][1];
+            let date_match = raw_str.match(date_regex);
+            let date_str = "";
+            if (date_match !== null){
+                date_str = format_date(date_match[0]);
+            }
+            console.log(date_str);
+
             let cases_data = drop_col(cases_raw_data, 2);
             cases_data[0][1] = "Cases";
 
             console.log("###");
             print_data(cases_data);
 
-            // Tests
+            // TESTS
             let tests_raw_data = extract_from_table(tables[1]);
             let tests_data = drop_cols(tests_raw_data, [2,3,4]);
             // out_str += "###\n";
