@@ -377,17 +377,17 @@ def preprocess_prov_data():
 
     # Confirmed
     # confirmed_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_confirmed.csv")
-    # confirmed_by_prov_timeline.to_csv("data/provincial/confirmed_by_prov_timeline.csv")
+    # confirmed_by_prov_timeline.to_csv("data/provincial/confirmed_by_prov_timeline_flat.csv")
     #
     # # Deaths
     # deaths_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_deaths.csv",
     #                                                 round_no=4)
-    # deaths_by_prov_timeline.to_csv("data/provincial/deaths_by_prov_timeline.csv")
+    # deaths_by_prov_timeline.to_csv("data/provincial/deaths_by_prov_timeline_flat.csv")
     #
     # # Recoveries
     # recoveries_by_prov_timeline = get_cum_daily_by_prov("covid19za_provincial_cumulative_timeline_recoveries.csv",
     #                                                     fill_date_gaps=True)
-    # recoveries_by_prov_timeline.to_csv("data/provincial/recoveries_by_prov_timeline.csv")
+    # recoveries_by_prov_timeline.to_csv("data/provincial/recoveries_by_prov_timeline_flat.csv")
 
     # Total & Latest Change
     def get_tot_latest_change(data_url, fill_date_gaps=False, use_local_data=False):
