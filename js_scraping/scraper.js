@@ -238,7 +238,7 @@ function scrape(no_sources){
                 let curr_heading_text = alert_a_list[i].children[0].data;
                 curr_heading_text = curr_heading_text.replaceAll(/\t|\n|\r'/g,'');
                 if (curr_heading_text.toLowerCase().includes('latest confirmed cases')){
-                    let date_regex = /[0-9]{2} [a-zA-Z]{3} [0-9]{4}/g; // e.g. for 01 May 2020
+                    let date_regex = /[0-9]{1,2} [a-zA-Z]{3} [0-9]{4}/g; // e.g. for 01 May 2020
                     let date_text = curr_heading_text.match(date_regex)[0];
                     alert_urls_dicts.push({"date":date_text, "url":alert_a_list[i].attribs.href});
                     alert_urls_list.push(alert_a_list[i].attribs.href);
