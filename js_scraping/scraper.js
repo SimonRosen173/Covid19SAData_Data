@@ -3,7 +3,7 @@
 const rp = require('request-promise');
 // const url = 'https://en.wikipedia.org/wiki/List_of_Presidents_of_the_United_States';
 const nicd_media_alert_url = "https://www.nicd.ac.za/media/alerts/";
-// const url = "https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-07-jan-2021/";
+const problem_url = "https://www.nicd.ac.za/latest-confirmed-cases-of-covid-19-in-south-africa-28-jan-2021/";
 const ch = require('cheerio');
 
 let date_regex = /[0-9]{1,2} [a-zA-Z]{3,} [0-9]{4}/g; // e.g. for 01 May 2020 or 1 January 2020
@@ -268,6 +268,7 @@ function main(){
 
     // console.log(no_sources);
     scrape(no_sources);
+    // extract_from_page(problem_url);
 }
 
 main();
